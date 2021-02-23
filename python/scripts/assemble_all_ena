@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+
+import assemble_all_ena
+import argparse
+
+
+parser = argparse.ArgumentParser(
+    prog='assemble_all_ena',
+    usage='assemble_all_ena <tasks> <options>',
+    description='script to run assemble_all_ena helper tasks',
+)
+subparsers = parser.add_subparsers(title='Available tasks', help='', metavar='')
+
+
+#______________________________ setup_samples_dir _____________________________
+subparser_setup_samples_dir = subparsers.add_parser(
+    'setup_samples_dir',
+    help='Sets up pipeline output directory. If already set up, then assumes samples in samples_file are new, and adds them',
+    usage='assemble_all_ena setup_samples_dir <samples_file> <output_dir>',
+)
+
+subparser_setup_samples_dir.add_argument('samples_file', help='File of sample names. One name per line')
+subparser_setup_samples_dir.add_argument('output_dir', help='Name of output directory')
+subparser_setup_samples_dir.set_defaults(func=assemble_all_ena.tasks.setup_samples_dir.run)
+
+
+#__________________________ make_nextflow_tsv _________________________________
+subparser_make_nextflow_tsv = subparsers.add_parser(
+    'make_nextflow_tsv',
+    help='Makes nextflow TSV file (first stage of pipeline)',
+    usage='assemble_all_ena make_nextflow_tsv <samples_dir> <outfile>',
+)
+
+subparser_make_nextflow_tsv.add_argument('samples_dir', help='Samples directory (made by setup_samples_dir)')
+subparser_make_nextflow_tsv.add_argument('outfile', help='Name of output TSV file')
+subparser_make_nextflow_tsv.set_defaults(func=assemble_all_ena.tasks.make_nextflow_tsv.run)
+
+
+#__________________________ update_json _______________________________________
+subparser_update_json = subparsers.add_parser(
+    'update_json',
+    help='Updates JSON file in root of pipeline directory',
+    usage='assemble_all_ena update_json <samples_dir>',
+)
+
+subparser_update_json.add_argument('samples_dir', help='Samples directory (made by setup_samples_dir)')
+subparser_update_json.set_defaults(func=assemble_all_ena.tasks.update_json.run)
+
+
+#__________________________ update_ignore_in_json _______________________________________
+subparser_update_ignore_in_json = subparsers.add_parser(
+    'update_ignore_in_json',
+    help='Updates ignore field in JSON file. All fails set to ignore.',
+    usage='assemble_all_ena update_ignore_in_json <infile> <outfile>',
+)
+
+subparser_update_ignore_in_json.add_argument('infile', help='Input JSON file')
+subparser_update_ignore_in_json.add_argument('outfile', help='Output JSON file. Will overwrite infile if same filename used.')
+subparser_update_ignore_in_json.set_defaults(func=assemble_all_ena.tasks.update_ignore_in_json.run)
+
+args = parser.parse_args()
+
+if hasattr(args, 'func'):
+    args.func(args)
+else:
+    parser.print_help()
+
